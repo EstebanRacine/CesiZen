@@ -1,0 +1,119 @@
+@startuml
+' Définition des acteurs avec couleurs
+actor "Visiteur anonyme" as Visitor #ADD8E6
+actor "Utilisateur connecté" as User #90EE90
+actor "Administrateur" as Admin #FFD700
+
+' Indique que l'Administrateur est une spécialisation de l'Utilisateur connecté
+Admin -|> User
+
+' ---------------------------
+' REGROUPEMENT DES ACTIVITÉS
+' ---------------------------
+
+package "Actions Visiteur" #ADD8E6 {
+  usecase "Afficher posts/\ninformations" as UC_AfficherPosts
+  usecase "Se connecter" as UC_Connexion
+  usecase "Créer un compte" as UC_CreerCompte
+  usecase "Réinitialisation du mot de passe" as UC_ResetPwd
+
+  ' Sous-processus obligatoire lors de la création de compte
+  usecase "Valider email" as UC_ValiderEmail
+  UC_CreerCompte ..> UC_ValiderEmail : <<include>>
+}
+
+package "Actions Utilisateur" #90EE90 {
+  usecase "Accéder au contenu" as UC_Contenu
+  usecase "Se déconnecter" as UC_Deconnexion
+  usecase "Suivre tracker\nd'émotion" as UC_Tracker
+  usecase "Visualiser rapport\nd'émotion (période donnée)" as UC_Rapport
+  usecase "Exporter rapport" as UC_ExporterRapport
+  usecase "Ajouter une émotion\nau journal" as UC_AjouterEmotion
+  usecase "Accéder au profil" as UC_Profil
+  usecase "Gérer notifications" as UC_Notif
+
+  ' La modification du profil est optionnelle
+  usecase "Modifier profil" as UC_ModifierProfil
+  UC_Profil ..> UC_ModifierProfil : <<extend>>
+  UC_ModifierProfil ...> UC_ResetPwd : <<extend>>
+
+  ' L'export d'un rapport est une fonctionnalité optionnelle
+  UC_Rapport ..> UC_ExporterRapport : <<extend>>
+}
+
+package "Actions Administrateur" #FFD700 {
+  usecase "Accéder à la page admin" as UC_AdminPage
+  usecase "Gérer utilisateurs" as UC_GererUsers
+  usecase "Gérer posts" as UC_GererPosts
+  usecase "Gérer émotions" as UC_GererEmotions
+
+  ' Détails de la gestion des utilisateurs
+  usecase "Voir liste des\nutilisateurs" as UC_ListeUsers
+  usecase "Modifier compte\n(utilisateur)" as UC_ModifierUser
+
+  ' Détails de la gestion des posts
+  usecase "Lister les posts" as UC_ListerPosts
+  usecase "Créer/éditer/supprimer\nun post" as UC_CrudPost
+  usecase "Publier post" as UC_PublierPost
+
+  ' Détails de la gestion des émotions
+  usecase "Lister les émotions" as UC_ListerEmotions
+  usecase "Ajouter émotion" as UC_AjouterEmotionAdmin
+  usecase "Modifier émotion" as UC_ModifierEmotion
+  usecase "Supprimer émotion" as UC_SupprimerEmotion
+  usecase "Publier une émotion" as UC_PublierEmotion
+
+  UC_AdminPage --> UC_GererUsers
+  UC_AdminPage --> UC_GererPosts
+  UC_AdminPage --> UC_GererEmotions
+
+  UC_GererUsers ..> UC_ListeUsers : <<include>>
+  UC_ListeUsers .> UC_ModifierUser : <<extend>>
+
+  UC_GererPosts ..> UC_ListerPosts : <<include>>
+  UC_ListerPosts ..> UC_CrudPost : <<extend>>
+  UC_CrudPost ..> UC_PublierPost : <<include>>
+
+  UC_GererEmotions ..> UC_ListerEmotions : <<include>>
+  UC_ListerEmotions ..> UC_AjouterEmotionAdmin : <<extend>>
+  UC_ListerEmotions ..> UC_ModifierEmotion : <<extend>>
+  UC_ListerEmotions ..> UC_SupprimerEmotion : <<extend>>
+
+  UC_AjouterEmotionAdmin ..> UC_PublierEmotion : <<include>>
+  UC_ModifierEmotion ..> UC_PublierEmotion : <<include>>
+}
+
+' ---------------------------
+' LIENS ENTRE ACTEURS ET CAS D'UTILISATION
+' ---------------------------
+Visitor --> UC_AfficherPosts
+Visitor --> UC_Connexion
+Visitor --> UC_CreerCompte
+Visitor --> UC_ResetPwd
+
+User --> UC_Contenu
+User --> UC_Deconnexion
+User --> UC_AfficherPosts
+
+UC_Contenu --> UC_Profil
+UC_Contenu --> UC_Notif
+UC_Contenu --> UC_Tracker
+
+UC_Tracker ..> UC_AjouterEmotion : <<extend>>
+UC_Tracker ..> UC_Rapport : <<extend>>
+
+' L'administrateur accède aux fonctionnalités spécifiques via la page admin
+Admin --> UC_AdminPage
+' La page admin est accessible en option depuis le contenu (pour un utilisateur connecté ayant les droits)
+UC_Contenu ..> UC_AdminPage : <<extend>>\nsi admin
+
+' ---------------------------
+' NOTE SUR LA TRANSFORMATION D'UN VISITEUR EN UTILISATEUR
+' ---------------------------
+note right of UC_Connexion
+  Après authentification,
+  le visiteur anonyme
+  devient utilisateur connecté.
+end note
+
+@enduml

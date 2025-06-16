@@ -1,0 +1,90 @@
+@startuml
+
+class User {
+    - int id {PK}
+    - String username
+    - String password
+    - boolean actif
+    - List<String> roles
+    - Date dateCreation
+    - Date dateSuppression
+
+    + void modifierUser(String username, String roles, boolean actif, User modificateur)
+    + void reinitialiserMotDePasse(String nouveauMotDePasse)
+    + void supprimerUser()
+}
+
+class Menu {
+    - int id {PK}
+    - String nom
+    - String icone
+    - boolean actif
+    - Date dateCreation
+    - Date dateSuppression
+
+    + void ajouterInfo(Info info)
+    + void supprimerMenu(User utilisateur)
+    + void modifierMenu(String nom, String icone, User utilisateur)
+}
+
+class Info {
+    - int id {PK}
+    - String titre
+    - String contenu
+    - boolean actif
+    - Date dateCreation
+    - Date dateSuppression
+    - Date dateModification
+
+    + void modifierInfo(String titre, String contenu, User utilisateur)
+    + void supprimerInfo(User utilisateur)
+}
+
+class Emotion {
+    - int id {PK}
+    - String nom
+    - String icone
+    - boolean actif
+    - Date dateCreation
+    - Date dateSuppression
+
+    + void modifierEmotion(String nom, String icone, User utilisateur)
+    + void supprimerEmotion(User utilisateur)
+}
+
+class Categorie {
+    - int id {PK}
+    - String nom
+    - String couleur
+
+    + void ajouterEmotion(Emotion emotion)
+}
+
+class Tracker {
+    - Date dateTime {PK}
+    - String commentaire
+    - boolean actif
+    - Date dateSuppression
+
+    + void modifierTracker(String commentaire, User utilisateur)
+    + void supprimerTracker(User utilisateur)
+}
+
+User "1" --* "crée" Menu
+User "1" --* "crée" Info
+User "1" --* "crée" Emotion
+
+Menu "1" --* "contient" Info
+
+User "1" --* "supprime" Menu
+User "1" --* "supprime" Info
+User "1" --* "supprime" Emotion
+
+User "1" --* "supprime" Tracker
+
+User "1" --* Tracker : "crée" {FK, PK}
+Emotion "1" --* Tracker : "est ressenti" {FK, PK}
+
+Categorie "1" --* "contient" Emotion
+
+@enduml
