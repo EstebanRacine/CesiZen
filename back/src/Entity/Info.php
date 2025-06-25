@@ -13,27 +13,27 @@ class Info
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['info:read'])]
+    #[Groups(['info:read', 'menu:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['info:read'])]
+    #[Groups(['info:read', 'menu:read'])]
     private ?string $titre = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Groups(['info:read'])]
+    #[Groups(['info:read', 'menu:read'])]
     private ?string $contenu = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['info:read'])]
+    #[Groups(['info:read', 'menu:read'])]
     private ?string $image = null;
 
     #[ORM\Column]
-    #[Groups(['info:read'])]
+    #[Groups(['info:read', 'menu:read'])]
     private ?bool $actif = null;
 
     #[ORM\Column]
-    #[Groups(['info:read'])]
+    #[Groups(['info:read', 'menu:read'])]
     private ?\DateTime $dateCreation = null;
 
     #[ORM\Column(nullable: true)]
@@ -56,6 +56,11 @@ class Info
     #[ORM\ManyToOne]
     #[Groups(['info:read'])]
     private ?User $supprimeur = null;
+
+    #[ORM\ManyToOne(inversedBy: 'infos')]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['info:read'])]
+    private ?Menu $menu = null;
 
     public function getId(): ?int
     {
@@ -178,6 +183,18 @@ class Info
     public function setSupprimeur(?User $supprimeur): static
     {
         $this->supprimeur = $supprimeur;
+
+        return $this;
+    }
+
+    public function getMenu(): ?Menu
+    {
+        return $this->menu;
+    }
+
+    public function setMenu(?Menu $menu): static
+    {
+        $this->menu = $menu;
 
         return $this;
     }

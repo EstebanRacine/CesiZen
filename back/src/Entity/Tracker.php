@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\TrackerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: TrackerRepository::class)]
 class Tracker
@@ -11,20 +12,30 @@ class Tracker
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['tracker:read', 'user:read'])]
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Groups(['tracker:read'])]
     private ?\DateTime $datetime = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['tracker:read'])]
     private ?string $commentaire = null;
 
     #[ORM\Column]
+    #[Groups(['tracker:read'])]
     private ?bool $actif = null;
 
     #[ORM\ManyToOne(inversedBy: 'trackers')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['tracker:read'])]
     private ?User $user = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['tracker:read'])]
+    private ?Emotion $emotion = null;
 
     public function getId(): ?int
     {
@@ -75,6 +86,18 @@ class Tracker
     public function setUser(?User $user): static
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    public function getEmotion(): ?Emotion
+    {
+        return $this->emotion;
+    }
+
+    public function setEmotion(?Emotion $emotion): static
+    {
+        $this->emotion = $emotion;
 
         return $this;
     }

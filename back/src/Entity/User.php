@@ -17,11 +17,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:read', 'tracker:read', 'info:read'])]
+    #[Groups(['user:read', 'tracker:read', 'info:read', 'menu:read', 'emotion:read', 'categorie_emotion:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Groups(['user:read', 'tracker:read', 'info:read'])]
+    #[Groups(['user:read', 'tracker:read', 'info:read', 'menu:read', 'emotion:read', 'categorie_emotion:read'])]
     private ?string $username = null;
 
     /**
