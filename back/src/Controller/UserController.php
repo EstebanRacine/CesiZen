@@ -13,6 +13,7 @@ use OpenApi\Attributes as OA;
 use App\Entity\User;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Nelmio\ApiDocBundle\Attribute\Model;
 
 #[Route('/api/user', name: 'api_user_')]
 final class UserController extends AbstractController
@@ -73,7 +74,7 @@ final class UserController extends AbstractController
                     property: 'password', 
                     type: 'string', 
                     description: 'Mot de passe de l\'utilisateur',
-                    exemple: 'password123'
+                    example: 'password123'
                 ),
             ]
         )
@@ -188,6 +189,8 @@ final class UserController extends AbstractController
         $user->setUsername($data['username']);
         $user->setPassword($passwordHasher->hashPassword($user, $data['password']));
         $user->setRoles(['ROLE_USER']);
+        $user->setActif(true);
+        $user->setDateCreation(new \DateTime());
 
         $em->persist($user);
         $em->flush();
@@ -642,5 +645,11 @@ final class UserController extends AbstractController
             'message' => 'Mot de passe réinitialisé avec succès',
             'code' => Response::HTTP_OK
         ], Response::HTTP_OK);
+    }
+
+    public function forgetPassword(Request $request, UserRepository $userRepository, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $em): Response
+    {
+        // Cette méthode est laissée vide pour l'instant, car elle n'est pas implémentée dans le code original.
+        return new JsonResponse(['message' => 'Cette fonctionnalité n\'est pas encore implémentée'], Response::HTTP_NOT_IMPLEMENTED);
     }
 }

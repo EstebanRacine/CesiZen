@@ -4,12 +4,14 @@ namespace App\Controller;
 
 use App\Entity\Info;
 use App\Repository\InfoRepository;
+use App\Repository\MenuRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
+use Nelmio\ApiDocBundle\Attribute\Model;
 
 #[Route('/api/info', name: 'info_')]
 final class InfoController extends AbstractController
@@ -84,6 +86,51 @@ final class InfoController extends AbstractController
         return $this->json($info, Response::HTTP_OK, [], ['groups' => 'info:read']);
     }
 
+    #[Route('/menu/{id}', name: 'get_by_menu', methods: ['GET'])]
+    #[OA\Tag(name: 'Info')]
+    #[OA\Get(
+        summary: 'Récupérer les infos par menu',
+        description: 'Retourne une liste d\'infos actives associées à un menu spécifique.',
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        in: 'path',
+        required: true,
+        description: 'ID du menu pour lequel récupérer les infos',
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Liste des infos actives pour le menu',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(
+                ref: new Model(
+                    type: Info::class,
+                    groups: ['info:read']
+                )
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 404,
+        description: 'Aucune info trouvée pour ce menu',
+        content: new OA\JsonContent(
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'message', type: 'string', description: 'Message d\'erreur')
+            ]
+        )
+    )]
+    public function getByMenu(int $id, InfoRepository $infoRepository): Response
+    {
+        $infos = $infoRepository->findBy(['menu' => $id, 'actif' => true], ['dateCreation' => 'DESC']);
+        if (empty($infos)) {
+            return $this->json(['message' => 'Aucune info trouvée pour ce menu'], Response::HTTP_NOT_FOUND);
+        }
+        return $this->json($infos, Response::HTTP_OK, [], ['groups' => 'info:read']);
+    }
+
     #[Route('/', name: 'create_info', methods: ['POST'])]
     #[OA\Tag(name: 'Info')]
     #[OA\Post(
@@ -121,18 +168,26 @@ final class InfoController extends AbstractController
             ]
         )
     )]
-    public function createInfo(Request $request, EntityManagerInterface $em): Response
+    public function createInfo(Request $request, EntityManagerInterface $em, MenuRepository $menuRepository): Response
     {
-        $titre = $request->request->get('titre');
-        $contenu = $request->request->get('contenu');
+        $data = json_decode($request->getContent(), true);
+        $titre = $data['titre'] ?? null;
+        $contenu = $data['contenu'] ?? null;
+        $menu = $data['menu'] ?? null;
 
-        if (empty($titre) || empty($contenu)) {
-            return $this->json(['message' => 'Titre et contenu requis'], Response::HTTP_BAD_REQUEST);
+        if (empty($titre) || empty($contenu) || empty($menu)) {
+            return $this->json(['message' => 'Titre, contenu et menu requis'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $menu = $menuRepository->find($menu);
+        if (!$menu) {
+            return $this->json(['message' => 'Menu non trouvé'], Response::HTTP_BAD_REQUEST);
         }
 
         $info = new Info();
         $info->setTitre($titre);
         $info->setContenu($contenu);
+        $info->setMenu($menu);
         $info->setActif(true);
         $info->setDateCreation(new \DateTime());
         $info->setCreateur($this->getUser());
@@ -208,13 +263,16 @@ final class InfoController extends AbstractController
     )]
     public function updateInfo(int $id, Request $request, InfoRepository $infoRepository, EntityManagerInterface $em): Response
     {
+        $data = json_decode($request->getContent(), true);
+
         $info = $infoRepository->find($id);
         if (!$info) {
             return $this->json(['message' => 'Info non trouvée'], Response::HTTP_NOT_FOUND);
         }
 
-        $titre = $request->request->get('titre');
-        $contenu = $request->request->get('contenu');
+        $titre = $data['titre'] ?? null;
+        $contenu = $data['contenu'] ?? null;
+        
 
         if (empty($titre) || empty($contenu)) {
             return $this->json(['message' => 'Titre et contenu requis'], Response::HTTP_BAD_REQUEST);
