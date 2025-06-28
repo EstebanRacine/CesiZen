@@ -1,29 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
-      meta: {
-        requiresAuth: false,
-        title: 'Accueil'
-      }
-    },
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue'),
-      meta: {
-        requiresAuth: false, 
-        title: 'À propos'
-      }
-    },
-    {
-      path: '/articles',
       name: 'articles',
       component: () => import('../views/ArticlesView.vue'),
       meta: {
@@ -55,7 +36,7 @@ const router = createRouter({
       component: () => import('../views/AdminView.vue'),
       meta: {
         requiresAuth: true,
-        requiresRoles: ['admin'],
+        requiresRoles: ['ROLE_ADMIN'],
         title: 'Administration'
       }
     }

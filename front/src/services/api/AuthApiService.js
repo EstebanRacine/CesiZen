@@ -24,7 +24,7 @@ class AuthApiService extends ApiService {
   }
 
   get isAdmin() {
-    return computed(() => this.roles.value.includes('admin'));
+    return computed(() => this.roles.value.includes('ROLE_ADMIN'));
   }
 
   // Méthode pour vérifier les rôles
@@ -66,12 +66,38 @@ class AuthApiService extends ApiService {
   }
 
   /**
+   * Enregistre un nouvel utilisateur avec son login et mot de passe.
+   * @param {string} login - Le nom d'utilisateur pour le nouvel utilisateur.
+   * @param {string} password - Le mot de passe pour le nouvel utilisateur.
+   * @returns {Promise<any>} - La réponse de l'API.
+   */
+  async register(login, password) {
+    try {
+      const registerData = {
+        username: login,
+        password: password
+      };
+
+      const response = await this.post('/register', registerData);
+      
+      // Si l'inscription réussit et qu'un token est fourni, connecter automatiquement l'utilisateur
+      if (response.token) {
+        this.setToken(response.token);
+        this.setHeader('Authorization', `Bearer ${response.token}`);
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Erreur lors de l\'inscription:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Déconnecte l'utilisateur en supprimant le token d'authentification.
    */
   async logout() {
-    try {
-      // Optionnel : appeler l'endpoint de logout sur le serveur si disponible
-      // await this.post('/logout');
+    try {      
       
       // Utiliser clearToken pour nettoyer l'authentification
       this.clearToken();

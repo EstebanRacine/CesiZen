@@ -5,10 +5,10 @@ import authService from '@/services/singleton/authService.js'
 
 // Définir vos items de navigation avec leurs exigences (authentification et/ou rôles)
 const items = [
-  { name: 'Articles', icon: Newspaper, link: '/articles', requiresAuth: false, roles: [] },
+  { name: 'Articles', icon: Newspaper, link: '/', requiresAuth: false, roles: [] },
   { name: 'Tracker', icon: Laugh, link: '/tracker', requiresAuth: true, roles: [] },
-  { name: 'Profil', icon: User, link: '/profil', requiresAuth: true, roles: [] },
-  { name: 'Administration', icon: Settings, link: '/admin', requiresAuth: true, roles: ['admin'] },
+  { name: 'Profil', icon: User, link: '/profil', requiresAuth: false, roles: [] },
+  { name: 'Administration', icon: Settings, link: '/admin', requiresAuth: true, roles: ['ROLE_ADMIN'] },
 ]
 
 // Fonction pour déterminer si un élément de navigation doit être affiché
@@ -47,13 +47,10 @@ const handleLogin = () => {
 // Fonction pour afficher le rôle de l'utilisateur de manière lisible
 const getUserRoleDisplay = () => {
   const roles = authService.getUserRoles();
-  if (roles.includes('admin')) {
+  if (roles.includes('ROLE_ADMIN')) {
     return 'Administrateur';
   }
-  if (roles.includes('moderator')) {
-    return 'Modérateur';
-  }
-  if (roles.includes('user')) {
+  if (roles.includes('ROLE_USER')) {
     return 'Utilisateur';
   }
   return 'Membre';
@@ -97,10 +94,11 @@ const getUserRoleDisplay = () => {
         </router-link>
       </template>
 
+      <!-- Boutons de connexion/déconnexion cachés sur mobile -->
       <button
         v-if="!authService.isAuthenticated.value"
         @click="handleLogin"
-        class="nav-item connect-button"
+        class="nav-item connect-button desktop-only"
       >
         <span class="icon">
           <User />
@@ -112,7 +110,7 @@ const getUserRoleDisplay = () => {
       <button
         v-else
         @click="handleLogout"
-        class="nav-item disconnect-button"
+        class="nav-item disconnect-button desktop-only"
       >
         <span class="icon">
           <User />
@@ -343,6 +341,11 @@ const getUserRoleDisplay = () => {
   text-overflow: ellipsis;
 }
 
+/* Classe pour cacher des éléments sur mobile */
+.desktop-only {
+  display: flex;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar {
@@ -368,11 +371,19 @@ const getUserRoleDisplay = () => {
     display: none; /* Cache les informations utilisateur sur mobile */
   }
 
+  .desktop-only {
+    display: none !important; /* Cache les boutons de connexion/déconnexion sur mobile */
+  }
+
   .nav {
     flex-direction: row;
     gap: 1.5rem;
     width: 100%;
     justify-content: space-around;
+  }
+
+  .nav-item{
+    justify-content: center;
   }
 
   .label {
@@ -383,26 +394,6 @@ const getUserRoleDisplay = () => {
     width: 26px;
     height: 26px;
     stroke: #fade6d;
-  }
-
-  /* Ajustements pour les boutons de connexion/déconnexion sur mobile */
-  .connect-button,
-  .disconnect-button {
-    margin-top: 0; /* Pas de marge supérieure sur mobile */
-    flex-shrink: 0; /* Évite que le bouton ne rétrécisse trop */
-    padding: 0.5rem; /* Ajuste le padding */
-  }
-
-  .connect-button .icon,
-  .disconnect-button .icon {
-    width: 32px;
-    height: 32px;
-  }
-
-  .connect-button .icon > *,
-  .disconnect-button .icon > * {
-    width: 20px;
-    height: 20px;
   }
 }
 </style>
