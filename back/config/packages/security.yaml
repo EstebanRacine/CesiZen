@@ -17,10 +17,7 @@ security:
         login:
             pattern: ^/api/login
             stateless: true
-            json_login:
-                check_path: /api/login_check
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+            security: false  # Permet l'accès anonyme à notre endpoint de login
 
         api:
             pattern:   ^/api
@@ -40,8 +37,10 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/doc, roles: PUBLIC_ACCESS }
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/profile, roles: ROLE_USER }
+        - { path: ^/api, roles: ROLE_USER }
 
 when@test:
     security:
