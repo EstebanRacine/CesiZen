@@ -12,6 +12,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\User;
 
 #[Route('/api', name: 'app_auth_')]
 final class AuthController extends AbstractController
@@ -20,17 +22,20 @@ final class AuthController extends AbstractController
     private UserPasswordHasherInterface $passwordHasher;
     private JWTTokenManagerInterface $jwtManager;
     private ValidatorInterface $validator;
+    private EntityManagerInterface $entityManager;
 
     public function __construct(
         UserRepository $userRepository,
         UserPasswordHasherInterface $passwordHasher,
         JWTTokenManagerInterface $jwtManager,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
+        EntityManagerInterface $entityManager
     ) {
         $this->userRepository = $userRepository;
         $this->passwordHasher = $passwordHasher;
         $this->jwtManager = $jwtManager;
         $this->validator = $validator;
+        $this->entityManager = $entityManager;
     }
 
     #[Route('/login', name: 'login', methods: ['POST'])]
@@ -90,4 +95,90 @@ final class AuthController extends AbstractController
             ]
         ], Response::HTTP_OK);
     }
+
+
+    #[Route('/register', name: 'register', methods: ['POST'])]
+    public function register(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true) ?: $request->request->all();
+
+        if (!isset($data['username']) || !isset($data['password'])) {
+            return $this->json([
+                'message' => 'Identifiants manquants'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $username = $data['username'];
+        $password = $data['password'];
+        $errors = [];
+
+        // Validation du nom d'utilisateur
+        $usernameViolations = $this->validator->validate($username, [
+            new Assert\NotBlank(),
+            new Assert\Length(['min' => 3, 'max' => 50]),
+            new Assert\Regex([
+                'pattern' => '/^[a-zA-Z0-9_]+$/',
+                'message' => 'Le nom d\'utilisateur ne doit contenir que des lettres, des chiffres et des tirets bas.'
+            ])
+        ]);
+        foreach ($usernameViolations as $violation) {
+            $errors['username'][] = $violation->getMessage();
+        }
+
+        // Validation du mot de passe
+        $passwordViolations = $this->validator->validate($password, [
+            new Assert\NotBlank(),
+            new Assert\Length(['min' => 6, 'max' => 255]),
+            new Assert\Regex([
+                'pattern' => '/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
+                'message' => 'Le mot de passe doit contenir au moins 6 caractères avec au moins une lettre, un chiffre et un caractère spécial (@$!%*?&).'
+            ])
+        ]);
+        foreach ($passwordViolations as $violation) {
+            $errors['password'][] = $violation->getMessage();
+        }
+
+        if (!empty($errors)) {
+            return $this->json([
+                'message' => 'Erreur de validation',
+                'errors' => $errors
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifie si l'utilisateur existe déjà
+        $existingUser = $this->userRepository->findOneBy(['username' => $username]);
+        if ($existingUser) {
+            return $this->json([
+                'message' => 'Ce nom d\'utilisateur est déjà pris'
+            ], Response::HTTP_CONFLICT);
+        }
+
+        // Création de l'utilisateur
+        $user = new User();
+        $user->setUsername($username);
+        $user->setPassword($this->passwordHasher->hashPassword($user, $password));
+        $user->setRoles(['ROLE_USER']);
+        $user->setActif(true);
+        $user->setDateCreation(new \DateTime());
+
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        $token = $this->jwtManager->create($user);
+        $expiresAt = new \DateTime('+1 hour');
+
+        return $this->json([
+            'message' => 'Utilisateur créé avec succès',
+            'token' => $token,
+            'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            'user' => [
+                'id' => $user->getId(),
+                'username' => $user->getUsername(),
+                'roles' => $user->getRoles(),
+                'actif' => $user->isActif(),
+                'date_creation' => $user->getDateCreation()?->format('Y-m-d H:i:s')
+            ]
+        ], Response::HTTP_CREATED);
+    }
+
 }
