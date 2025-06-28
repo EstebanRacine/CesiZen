@@ -37,10 +37,37 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
+        # Documentation API - accès public
         - { path: ^/api/doc, roles: PUBLIC_ACCESS }
+        
+        # Authentification - accès public
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        
+        # Listing des infos et menus - accès public
+        - { path: ^/api/info$, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/info/\d+$, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/info/menu/\d+$, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/menu$, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/menu/\d+$, roles: PUBLIC_ACCESS, methods: [GET] }
+        
+        # Gestion des infos - admin uniquement pour CUD (Create, Update, Delete)
+        - { path: ^/api/info, roles: ROLE_ADMIN, methods: [POST, PUT, PATCH, DELETE] }
+        
+        # Gestion des menus - admin uniquement pour CUD
+        - { path: ^/api/menu, roles: ROLE_ADMIN, methods: [POST, PUT, PATCH, DELETE] }
+        
+        # Tracker - utilisateur connecté requis
+        - { path: ^/api/tracker, roles: ROLE_USER }
+        
+        # Profil utilisateur - utilisateur connecté requis
         - { path: ^/api/profile, roles: ROLE_USER }
+        
+        # Gestion des utilisateurs - admin uniquement
+        - { path: ^/api/user, roles: ROLE_ADMIN }
+        - { path: ^/api/users, roles: ROLE_ADMIN }
+        
+        # Toutes les autres routes API - utilisateur connecté par défaut
         - { path: ^/api, roles: ROLE_USER }
 
 when@test:
