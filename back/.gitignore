@@ -29,4 +29,5 @@
 ###< lexik/jwt-authentication-bundle ###
 
 
-/public/uploads/
+public/uploads/infos/info_*
+public/uploads/emotions/emotion_*

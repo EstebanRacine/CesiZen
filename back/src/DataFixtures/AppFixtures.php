@@ -27,8 +27,28 @@ class AppFixtures extends Fixture
             $this->addReference('user_'.$i, $user);
         }
 
+        // Administrators
+        foreach (['admin', 'admin2'] as $i => $username) {
+            $user = new User();
+            $user->setUsername($username);
+            $user->setPassword(password_hash('admin'.$i, PASSWORD_BCRYPT));
+            $user->setRoles(['ROLE_ADMIN']);
+            $user->setActif(true);
+            $user->setDateCreation(new \DateTime("-".($i + 3).' days'));
+            $manager->persist($user);
+            $this->addReference('admin_'.$i, $user);
+        }
+
         // Catégories d'émotions
-        foreach ([['Positive', '#00FF00'], ['Négative', '#FF0000'], ['Neutre', '#CCCCCC']] as $i => [$nom, $couleur]) {
+        $listeCategories = [
+            ['Joie', '#FFD700'],      
+            ['Colère', '#B22222'],    
+            ['Peur', '#4B0082'],      
+            ['Tristesse', '#1E90FF'],  
+            ['Surprise', '#FFA500'],
+            ['Dégoût', '#556B2F'],    
+        ];
+        foreach ($listeCategories as $i => [$nom, $couleur]) {
             $categorie = new CategorieEmotion();
             $categorie->setNom($nom);
             $categorie->setCouleur($couleur);
@@ -36,14 +56,55 @@ class AppFixtures extends Fixture
             $this->addReference('categorie_'.$i, $categorie);
         }
 
-        // Émotions
         $emotionsData = [
-            ['Joie', 'smile', 0],
-            ['Tristesse', 'sad', 1],
-            ['Colère', 'angry', 1],
-            ['Sérénité', 'relaxed', 2],
-            ['Surprise', 'surprised', 2],
+            // Joie
+            ['Fierté', '/uploads/emotions/dev/fierte.png', 0],
+            ['Consentement', '/uploads/emotions/dev/consentement.png', 0],
+            ['Enchantement', '/uploads/emotions/dev/enchantement.png', 0],
+            ['Excitation', '/uploads/emotions/dev/excitation.png', 0],
+            ['Émerveillement', '/uploads/emotions/dev/emerveillement.png', 0],
+            ['Gratitude', '/uploads/emotions/dev/gratitude.png', 0],
+
+            // Colère
+            ['Frustration', '/uploads/emotions/dev/frustration.png', 1],
+            ['Irritation', '/uploads/emotions/dev/irritation.png', 1],
+            ['Rage', '/uploads/emotions/dev/rage.png', 1],
+            ['Ressentiment', '/uploads/emotions/dev/ressentiment.png', 1],
+            ['Agacement', '/uploads/emotions/dev/agacement.png', 1],
+            ['Hostilité', '/uploads/emotions/dev/hostilite.png', 1],
+
+            // Peur
+            ['Inquiétude', '/uploads/emotions/dev/inquietude.png', 2],
+            ['Anxiété', '/uploads/emotions/dev/anxiete.png', 2],
+            ['Terreur', '/uploads/emotions/dev/terreur.png', 2],
+            ['Appréhension', '/uploads/emotions/dev/apprehension.png', 2],
+            ['Panique', '/uploads/emotions/dev/panique.png', 2],
+            ['Crainte', '/uploads/emotions/dev/crainte.png', 2],
+
+            // Tristesse
+            ['Chagrin', '/uploads/emotions/dev/chagrin.png', 3],
+            ['Mélancolie', '/uploads/emotions/dev/melancolie.png', 3],
+            ['Abattement', '/uploads/emotions/dev/abattement.png', 3],
+            ['Désespoir', '/uploads/emotions/dev/desespoir.png', 3],
+            ['Solitude', '/uploads/emotions/dev/solitude.png', 3],
+            ['Dépression', '/uploads/emotions/dev/depression.png', 3],
+
+            // Surprise
+            ['Étonnement', '/uploads/emotions/dev/etonnement.png', 4],
+            ['Stupéfaction', '/uploads/emotions/dev/stupefaction.png', 4],
+            ['Sidération', '/uploads/emotions/dev/sideration.png', 4],
+            ['Incrédulité', '/uploads/emotions/dev/incredulite.png', 4],
+            ['Confusion', '/uploads/emotions/dev/confusion.png', 4],
+
+            // Dégoût
+            ['Répulsion', '/uploads/emotions/dev/repulsion.png', 5],
+            ['Déplaisir', '/uploads/emotions/dev/deplaisir.png', 5],
+            ['Nausée', '/uploads/emotions/dev/nausee.png', 5],
+            ['Dédain', '/uploads/emotions/dev/dedain.png', 5],
+            ['Horreur', '/uploads/emotions/dev/horreur.png', 5],
+            ['Dégoût profond', '/uploads/emotions/dev/degout_profond.png', 5],
         ];
+
         foreach ($emotionsData as $i => [$nom, $icone, $catIdx]) {
             $emotion = new Emotion();
             $emotion->setNom($nom);
@@ -57,7 +118,7 @@ class AppFixtures extends Fixture
         }
 
         // Menus
-        foreach ([['Accueil', 'home'], ['Profil', 'user'], ['Statistiques', 'chart']] as $i => [$nom, $icone]) {
+        foreach ([['Actualités', 'NotepadText'], ['Santé', 'HeartPlus'], ['Stress', 'Brain']] as $i => [$nom, $icone]) {
             $menu = new Menu();
             $menu->setNom($nom);
             $menu->setIcone($icone);

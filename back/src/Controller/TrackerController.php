@@ -156,7 +156,7 @@ final class TrackerController extends AbstractApiController
         )
     )]
     public function create(EntityManagerInterface $em, Request $request, EmotionRepository $emotionRepository): Response{
-        $data = $this->extractRequestData($request, ['emotion', 'datetime', 'note']);
+        $data = $this->extractRequestData($request, ['emotion', 'datetime', 'commentaire']);
 
         if (empty($data['emotion']) || empty($data['datetime'])) {
             return $this->json(['message' => 'Emotion et datetime sont requis'], Response::HTTP_BAD_REQUEST);
