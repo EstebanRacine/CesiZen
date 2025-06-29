@@ -178,9 +178,10 @@ final class UserController extends AbstractApiController
             ], Response::HTTP_CONFLICT);
         }
 
-        if (strlen($data['password']) < 8 || !preg_match('/[A-Z]/', $data['password']) || !preg_match('/[0-9]/', $data['password'])) {
+        // Verifier si il respecte le regex /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+        if (!preg_match('/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/', $data['password'])) {
             return new JsonResponse([
-                'message' => 'Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre',
+                'message' => 'Le mot de passe doit contenir au moins 6 caractères, une lettre, un chiffre et un caractère spécial',
                 'code' => Response::HTTP_BAD_REQUEST
             ], Response::HTTP_BAD_REQUEST);
         }
@@ -594,7 +595,7 @@ final class UserController extends AbstractApiController
                     property: 'message',
                     type: 'string',
                     description: 'Message d\'erreur',
-                    example: 'Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre'
+                    example: 'Le mot de passe doit contenir au moins 6 caractères, une majuscule et un chiffre'
                 ),
                 new OA\Property(
                     property: 'code',
@@ -743,12 +744,13 @@ final class UserController extends AbstractApiController
         }
 
         // Valider le mot de passe
-        if (strlen($data['password']) < 8 || !preg_match('/[A-Z]/', $data['password']) || !preg_match('/[0-9]/', $data['password'])) {
+        if (!preg_match('/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/', $data['password'])) {
             return new JsonResponse([
-                'message' => 'Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre',
+                'message' => 'Le mot de passe doit contenir au moins 6 caractères, une lettre, un chiffre et un caractère spécial',
                 'code' => Response::HTTP_BAD_REQUEST
             ], Response::HTTP_BAD_REQUEST);
         }
+
 
         $user = new User();
         $user->setUsername($data['username']);

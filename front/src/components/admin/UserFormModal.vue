@@ -68,7 +68,7 @@
             {{ errors.password }}
           </div>
           <div class="form-help">
-            Min. 8 caractères avec au moins une majuscule et un chiffre
+            Min. 6 caractères avec au moins une majuscule et un chiffre
           </div>
         </div>
 
