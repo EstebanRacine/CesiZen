@@ -1,25 +1,21 @@
 <template>
-  <div class="empty-container">
-    <div class="empty-content">
-      <component :is="icon" :size="iconSize" />
-      <h3>{{ title }}</h3>
-      <p>{{ message }}</p>
-      <slot name="action"></slot>
+  <div class="empty-state">
+    <div class="empty-icon">
+      <slot name="icon">{{ icon }}</slot>
+    </div>
+    <h3 class="heading-small text-secondary">{{ title }}</h3>
+    <p v-if="message" class="text-secondary">{{ message }}</p>
+    <div v-if="$slots.action" class="empty-actions">
+      <slot name="action" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { FileText } from 'lucide-vue-next'
-
 defineProps({
   icon: {
-    type: [Object, String],
-    default: () => FileText
-  },
-  iconSize: {
-    type: Number,
-    default: 64
+    type: String,
+    default: '📝'
   },
   title: {
     type: String,
@@ -27,39 +23,22 @@ defineProps({
   },
   message: {
     type: String,
-    required: true
+    default: null
   }
 })
 </script>
 
 <style scoped>
-.empty-container {
+.empty-icon {
+  font-size: var(--font-size-5xl);
+  margin-bottom: var(--spacing-lg);
+}
+
+.empty-actions {
+  margin-top: var(--spacing-lg);
   display: flex;
+  gap: var(--spacing-md);
   justify-content: center;
-  align-items: center;
-  padding: 4rem 2rem;
-}
-
-.empty-content {
-  text-align: center;
-  color: #6b7280;
-  max-width: 500px;
-}
-
-.empty-content :deep(svg) {
-  color: #d1d5db;
-  margin-bottom: 1.5rem;
-}
-
-.empty-content h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.empty-content p {
-  margin: 0;
-  line-height: 1.6;
+  flex-wrap: wrap;
 }
 </style>

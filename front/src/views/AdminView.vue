@@ -1,9 +1,10 @@
 <template>
-  <div class="admin-view">
-    <div class="admin-header">
-      <h1>Administration</h1>
-      <p>Tableau de bord administrateur - Gestion de l'application</p>
-    </div>
+  <div class="app-background mobile-safe p-3xl">
+
+    <PageHeader
+      title="Administration"
+      subtitle="Tableau de bord administrateur - Gestion de l'application"
+    />
     
     <div v-if="isAdmin" class="admin-content">
       <AdminNavigation 
@@ -39,6 +40,7 @@
 
 <script setup>
 import { useAdminNavigation } from '@/composables/useAdminNavigation.js'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import AdminNavigation from '@/components/admin/AdminNavigation.vue'
 import AccessDenied from '@/components/ui/AccessDenied.vue'
 import InfoAdmin from '@/components/admin/InfoAdmin.vue'
@@ -51,30 +53,6 @@ const { activeSection, isAdmin, adminSections, setActiveSection } = useAdminNavi
 </script>
 
 <style scoped>
-.admin-view {
-  padding: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.admin-header {
-  text-align: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.admin-header h1 {
-  color: #2a5d49;
-  margin-bottom: 0.5rem;
-  font-size: 2.5rem;
-  font-weight: 700;
-}
-
-.admin-header p {
-  color: #6b7280;
-  margin: 0.5rem 0;
-}
 
 .admin-content {
   margin-top: 2rem;

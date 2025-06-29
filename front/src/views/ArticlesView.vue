@@ -1,9 +1,10 @@
 <template>
-  <div class="articles-view">
-    <header class="page-header">
-      <h1 class="page-title">Articles</h1>
-      <p class="page-subtitle">Découvrez nos dernières actualités et informations</p>
-    </header>
+  <div class="app-background mobile-safe p-3xl">
+
+    <PageHeader
+      title="Articles"
+      subtitle="Découvrez nos dernières actualités et informations"
+    />
 
     <MenuFilter
       :menus-with-all="menusWithAll"
@@ -67,6 +68,7 @@
 
 <script setup>
 import { useArticles } from '@/composables/useArticles.js'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import MenuFilter from '@/components/filters/MenuFilter.vue'
 import LoadingState from '@/components/ui/LoadingState.vue'
 import ErrorState from '@/components/ui/ErrorState.vue'
@@ -96,35 +98,6 @@ const {
 </script>
 
 <style scoped>
-.articles-view {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.page-header {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-
-.page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #2a5d49;
-  margin: 0 0 1rem 0;
-  background: linear-gradient(135deg, #2a5d49 0%, #89c997 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.page-subtitle {
-  font-size: 1.1rem;
-  color: #6c757d;
-  margin: 0;
-  max-width: 600px;
-  margin: 0 auto;
-}
 
 .articles-header {
   display: flex;

@@ -1,4 +1,6 @@
 @import './base.css';
+@import './design-variables.css';
+@import './utilities.css';
 
 /* Cacher les scrollbars globalement */
 * {

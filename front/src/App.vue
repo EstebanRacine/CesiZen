@@ -25,8 +25,6 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   max-height: 100dvh;
-  margin-left: 25px;
-  margin-right: 25px;
 }
 </style>
  
