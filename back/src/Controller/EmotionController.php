@@ -156,22 +156,33 @@ final class EmotionController extends AbstractApiController
     )]
     #[OA\RequestBody(
         required: true,
-        content: new OA\JsonContent(
-            type: 'object',
-            properties: [
-                new OA\Property(
-                    property: 'nom',
-                    type: 'string',
-                    description: 'Nom de l\'émotion'
-                ),
-                new OA\Property(
-                    property: 'icone',
-                    type: 'string',
-                    description: 'Icône de l\'émotion'
+        content: [
+            new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'nom',
+                            type: 'string',
+                            description: 'Nom de l\'émotion'
+                        ),
+                        new OA\Property(
+                            property: 'categorie',
+                            type: 'integer',
+                            description: 'ID de la catégorie d\'émotion'
+                        ),
+                        new OA\Property(
+                            property: 'icone',
+                            type: 'string',
+                            format: 'binary',
+                            description: 'Image de l\'émotion (PNG)'
+                        )
+                    ],
+                    required: ['nom', 'categorie', 'icone']
                 )
-            ],
-            required: ['nom', 'icone']
-        )
+            )
+        ]
     )]
     #[OA\Response(
         response: 201,
@@ -199,24 +210,42 @@ final class EmotionController extends AbstractApiController
     )]
     public function create(Request $request, EntityManagerInterface $em): Response
     {
-        $data = $this->extractRequestData($request, ['nom', 'icone', 'categorie']);
+        // Extraire les données de la requête (JSON ou multipart)
+        $data = $this->extractRequestData($request, ['nom', 'categorie']);
+        $nom = $data['nom'] ?? null;
+        $categorieId = $data['categorie'] ?? null;
 
-        if (!isset($data['nom']) || !isset($data['icone']) || !isset($data['categorie'])) {
-            return $this->json(['message' => 'Le nom, l\'icône et la catégorie de l\'émotion sont requis'], Response::HTTP_BAD_REQUEST);
+        if (empty($nom) || empty($categorieId)) {
+            return $this->json(['message' => 'Le nom et la catégorie de l\'émotion sont requis'], Response::HTTP_BAD_REQUEST);
         }
 
-        $categorie = $em->getRepository(CategorieEmotion::class)->find($data['categorie']);
+        $categorie = $em->getRepository(CategorieEmotion::class)->find($categorieId);
         if (!$categorie) {
             return $this->json(['message' => 'La catégorie d\'émotion est invalide'], Response::HTTP_BAD_REQUEST);
         }
 
         $emotion = new Emotion();
-        $emotion->setNom($data['nom']);
-        $emotion->setIcone($data['icone']);
+        $emotion->setNom($nom);
         $emotion->setActif(true);
         $emotion->setDateCreation(new \DateTime());
         $emotion->setDernierModificateur($this->getUser());
         $emotion->setCategorie($categorie);
+
+        // Gestion du fichier image
+        $imageFile = $request->files->get('icone');
+        if ($imageFile && $imageFile->isValid()) {
+            $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/emotions';
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $newFilename = uniqid('emotion_') . '.' . $imageFile->guessExtension();
+            $imageFile->move($uploadDir, $newFilename);
+
+            $emotion->setIcone('/uploads/emotions/' . $newFilename);
+        } else {
+            return $this->json(['message' => 'Une image est requise pour créer une émotion'], Response::HTTP_BAD_REQUEST);
+        }
+
         $em->persist($emotion);
         $em->flush();
 
@@ -238,26 +267,37 @@ final class EmotionController extends AbstractApiController
     )]
     #[OA\RequestBody(
         required: true,
-        content: new OA\JsonContent(
-            type: 'object',
-            properties: [
-                new OA\Property(
-                    property: 'nom',
-                    type: 'string',
-                    description: 'Nom de l\'émotion'
-                ),
-                new OA\Property(
-                    property: 'icone',
-                    type: 'string',
-                    description: 'Icône de l\'émotion'
-                ),
-                new OA\Property(
-                    property: 'actif',
-                    type: 'boolean',
-                    description: 'Statut actif de l\'émotion'
+        content: [
+            new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'nom',
+                            type: 'string',
+                            description: 'Nom de l\'émotion'
+                        ),
+                        new OA\Property(
+                            property: 'categorie',
+                            type: 'integer',
+                            description: 'ID de la catégorie d\'émotion'
+                        ),
+                        new OA\Property(
+                            property: 'icone',
+                            type: 'string',
+                            format: 'binary',
+                            description: 'Image de l\'émotion (PNG) - Optionnel pour la mise à jour'
+                        ),
+                        new OA\Property(
+                            property: 'actif',
+                            type: 'boolean',
+                            description: 'Statut actif de l\'émotion'
+                        )
+                    ]
                 )
-            ]
-        )
+            )
+        ]
     )]
     #[OA\Response(
         response: 200,
@@ -285,7 +325,7 @@ final class EmotionController extends AbstractApiController
     )]
     public function update(Request $request, EntityManagerInterface $em, int $id): Response
     {
-        $data = $this->extractRequestData($request, ['nom', 'icone', 'categorie']);
+        $data = $this->extractRequestData($request, ['nom', 'categorie', 'actif']);
         $emotion = $em->getRepository(Emotion::class)->find($id);
 
         if (!$emotion) {
@@ -295,18 +335,38 @@ final class EmotionController extends AbstractApiController
         if (isset($data['nom'])) {
             $emotion->setNom($data['nom']);
         }
-        if (isset($data['icone'])) {
-            $emotion->setIcone($data['icone']);
-        }
+        
         if (isset($data['actif'])) {
             $emotion->setActif($data['actif']);
         }
+        
         if(isset($data['categorie'])) {
             $categorie = $em->getRepository(CategorieEmotion::class)->find($data['categorie']);
             if (!$categorie) {
                 return $this->json(['message' => 'La catégorie d\'émotion est invalide'], Response::HTTP_BAD_REQUEST);
             }
             $emotion->setCategorie($categorie);
+        }
+
+        // Gestion du fichier image
+        $imageFile = $request->files->get('icone');
+        if ($imageFile && $imageFile->isValid()) {
+            // Supprimer l'ancienne image si elle existe
+            if ($emotion->getIcone()) {
+                $oldImagePath = $this->getParameter('kernel.project_dir') . '/public' . $emotion->getIcone();
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
+                }
+            }
+            
+            $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/emotions';
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $newFilename = uniqid('emotion_') . '.' . $imageFile->guessExtension();
+            $imageFile->move($uploadDir, $newFilename);
+
+            $emotion->setIcone('/uploads/emotions/' . $newFilename);
         }
         
         $emotion->setDernierModificateur($this->getUser());
@@ -353,6 +413,8 @@ final class EmotionController extends AbstractApiController
             return $this->json(['message' => 'Émotion non trouvée'], Response::HTTP_NOT_FOUND);
         }
 
+        // Supprimer l'image associée si elle existe lors de la suppression définitive
+        // Note: Ici on ne fait que désactiver, donc on garde l'image
         $emotion->setActif(false);
         $emotion->setDateSuppression(new \DateTime());
         $emotion->setDernierModificateur($this->getUser());

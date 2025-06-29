@@ -24,6 +24,16 @@ abstract class AbstractApiController extends AbstractController
             // Pour les requêtes multipart/form-data, utiliser $request->request
             foreach ($fields as $field) {
                 $data[$field] = $request->request->get($field);
+                // Si la champs est 'actif', on le convertit en booléen
+                if ($field === 'actif') {
+                    if($data[$field] === 'true' || $data[$field] === '1') {
+                        $data[$field] = true;
+                    } elseif ($data[$field] === 'false' || $data[$field] === '0') {
+                        $data[$field] = false;
+                    } else {
+                        $data[$field] = null;
+                    }
+                }
             }
         } else {
             // Pour les requêtes JSON classiques
