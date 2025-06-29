@@ -9,6 +9,7 @@ class TrackerApiService extends ApiService {
   async getMyTrackers() {
     try {
       const response = await this.get('/tracker/me');
+      console.log('Trackers récupérés:', response);
       return response;
     } catch (error) {
       console.error('Erreur lors de la récupération des trackers:', error);
@@ -27,6 +28,24 @@ class TrackerApiService extends ApiService {
       return response;
     } catch (error) {
       console.error(`Erreur lors de la récupération des trackers pour la date ${date}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Récupère les trackers de l'utilisateur pour un mois et une année donnés
+   * @param {number} year - Année (ex: 2025)
+   * @param {number} month - Mois (1-12)
+   * @returns {Promise<Array>} - Liste des trackers pour ce mois
+   */
+  async getTrackersByMonth(year, month) {
+    try {
+      // Formatter le mois avec un zéro devant si nécessaire
+      const formattedMonth = String(month).padStart(2, '0');
+      const response = await this.get(`/tracker/me/month/${year}/${formattedMonth}`);
+      return response;
+    } catch (error) {
+      console.error(`Erreur lors de la récupération des trackers pour ${year}/${month}:`, error);
       throw error;
     }
   }
@@ -86,16 +105,27 @@ class TrackerApiService extends ApiService {
    * @returns {string} - Date formatée
    */
   formatDateForAPI(date) {
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   }
 
   /**
-   * Formate la datetime pour l'API (ISO 8601)
+   * Formate la datetime pour l'API en timezone locale (UTC+2)
    * @param {Date} date - Date à formater
-   * @returns {string} - DateTime formatée
+   * @returns {string} - DateTime formatée en timezone locale
    */
   formatDateTimeForAPI(date) {
-    return date.toISOString().slice(0, 19); // YYYY-MM-DDTHH:MM:SS
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    
+    // Retourner au format YYYY-MM-DDTHH:MM:SS en timezone locale
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`
   }
 }
 

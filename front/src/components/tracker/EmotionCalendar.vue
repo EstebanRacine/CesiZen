@@ -64,6 +64,10 @@ const props = defineProps({
     type: Date,
     default: () => new Date()
   },
+  currentDate: {
+    type: Date,
+    default: () => new Date()
+  },
   loading: {
     type: Boolean,
     default: false
@@ -72,7 +76,7 @@ const props = defineProps({
 
 const emit = defineEmits(['daySelected', 'monthChanged'])
 
-const currentDate = ref(new Date(props.selectedDate))
+const currentDate = ref(new Date(props.currentDate))
 const selectedDay = ref(null)
 
 const weekdays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -142,26 +146,71 @@ const getTrackersForDay = (date) => {
   }).sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
 }
 
+// Fonction pour éclaircir une couleur
+const lightenColor = (color, factor = 0.3) => {
+  // Convertir hex en RGB
+  const hex = color.replace('#', '')
+  const r = parseInt(hex.substr(0, 2), 16)
+  const g = parseInt(hex.substr(2, 2), 16)
+  const b = parseInt(hex.substr(4, 2), 16)
+  
+  // Éclaircir en mélangeant avec du blanc
+  const newR = Math.round(r + (255 - r) * factor)
+  const newG = Math.round(g + (255 - g) * factor)
+  const newB = Math.round(b + (255 - b) * factor)
+  
+  return `rgb(${newR}, ${newG}, ${newB})`
+}
+
 // Fonction pour générer le dégradé basé sur les trackers
 const generateGradient = (trackers) => {
   if (trackers.length === 0) return 'transparent'
   
   if (trackers.length === 1) {
-    const color = trackers[0].emotion?.categorie?.couleur || '#e5e7eb'
-    return color
+    const originalColor = trackers[0].emotion?.categorie?.couleur || '#e5e7eb'
+    const lightColor = lightenColor(originalColor, 0.4)
+    const darkerColor = lightenColor(originalColor, 0.1)
+    // Créer un gradient subtil même pour une seule couleur
+    return `linear-gradient(135deg, ${lightColor} 0%, ${darkerColor} 100%)`
   }
   
+  // Pour plusieurs couleurs, créer un gradient avec des zones plus définies
   const colors = trackers.map(tracker => 
     tracker.emotion?.categorie?.couleur || '#e5e7eb'
   )
   
-  // Créer un dégradé linéaire avec les couleurs des émotions
-  const gradientStops = colors.map((color, index) => {
-    const percentage = (index / (colors.length - 1)) * 100
-    return `${color} ${percentage}%`
-  }).join(', ')
+  let gradientStops = []
   
-  return `linear-gradient(45deg, ${gradientStops})`
+  if (colors.length === 2) {
+    // Pour 2 couleurs, gradient diagonal propre
+    const color1 = lightenColor(colors[0], 0.3)
+    const color2 = lightenColor(colors[1], 0.3)
+    return `linear-gradient(135deg, ${color1} 0%, ${color1} 45%, ${color2} 55%, ${color2} 100%)`
+  } else if (colors.length === 3) {
+    // Pour 3 couleurs, répartition en tiers
+    const color1 = lightenColor(colors[0], 0.3)
+    const color2 = lightenColor(colors[1], 0.3)
+    const color3 = lightenColor(colors[2], 0.3)
+    return `linear-gradient(135deg, ${color1} 0%, ${color1} 30%, ${color2} 35%, ${color2} 65%, ${color3} 70%, ${color3} 100%)`
+  } else {
+    // Pour 4+ couleurs, répartition équitable avec transitions nettes
+    gradientStops = colors.map((color, index) => {
+      const lightColor = lightenColor(color, 0.3)
+      const segmentSize = 100 / colors.length
+      const startPercent = index * segmentSize
+      const endPercent = (index + 1) * segmentSize
+      
+      if (index === 0) {
+        return `${lightColor} 0%, ${lightColor} ${endPercent - 5}%`
+      } else if (index === colors.length - 1) {
+        return `${lightColor} ${startPercent + 5}%, ${lightColor} 100%`
+      } else {
+        return `${lightColor} ${startPercent + 5}%, ${lightColor} ${endPercent - 5}%`
+      }
+    }).join(', ')
+    
+    return `linear-gradient(135deg, ${gradientStops})`
+  }
 }
 
 // Navigation du calendrier
@@ -190,11 +239,16 @@ const selectDay = (day) => {
 // Watcher pour la date sélectionnée depuis les props
 watch(() => props.selectedDate, (newDate) => {
   selectedDay.value = newDate
+})
+
+// Watcher pour la date courante depuis les props
+watch(() => props.currentDate, (newDate) => {
   currentDate.value = new Date(newDate)
 })
 
 onMounted(() => {
   selectedDay.value = props.selectedDate
+  currentDate.value = new Date(props.currentDate)
 })
 </script>
 
@@ -326,8 +380,15 @@ onMounted(() => {
 }
 
 .calendar-day.has-trackers {
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.calendar-day.has-trackers:hover {
+  background: rgba(255, 255, 255, 0.75);
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
 }
 
 .day-number {
@@ -363,11 +424,40 @@ onMounted(() => {
 
 .tracker-gradient {
   width: 100%;
-  height: 24px;
-  border-radius: 50px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  height: 28px;
+  border-radius: 12px;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.tracker-gradient::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.tracker-gradient::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.6) 0%, 
+    rgba(255, 255, 255, 0.2) 50%, 
+    rgba(255, 255, 255, 0.6) 100%);
+  pointer-events: none;
 }
 
 .tracker-count {
@@ -453,7 +543,8 @@ onMounted(() => {
   }
   
   .tracker-gradient {
-    height: 16px;
+    height: 20px;
+    border-radius: 10px;
   }
   
   .weekday {
@@ -500,7 +591,8 @@ onMounted(() => {
   }
   
   .tracker-gradient {
-    height: 12px;
+    height: 16px;
+    border-radius: 8px;
   }
   
   .tracker-count {

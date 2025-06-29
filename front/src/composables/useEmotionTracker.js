@@ -29,13 +29,8 @@ export function useEmotionTracker() {
   
   // Computed pour les trackers du mois actuel
   const currentMonthTrackers = computed(() => {
-    const startOfMonth = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), 1)
-    const endOfMonth = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 0)
-    
-    return trackers.value.filter(tracker => {
-      const trackerDate = new Date(tracker.datetime)
-      return trackerDate >= startOfMonth && trackerDate <= endOfMonth
-    })
+    // Les trackers sont déjà filtrés par mois via l'API
+    return trackers.value
   })
   
   // Computed pour les trackers de la date sélectionnée
@@ -61,9 +56,12 @@ export function useEmotionTracker() {
       loading.value = true
       error.value = null
       
-      // Charger tous les trackers de l'utilisateur
-      const userTrackers = await trackerService.getMyTrackers()
-      trackers.value = userTrackers
+      // Charger les trackers du mois actuel uniquement
+      const year = currentDate.value.getFullYear()
+      const month = currentDate.value.getMonth() + 1 // getMonth() retourne 0-11, on veut 1-12
+      
+      const monthTrackers = await trackerService.getTrackersByMonth(year, month)
+      trackers.value = monthTrackers
       
     } catch (err) {
       error.value = 'Erreur lors du chargement des trackers'
@@ -100,14 +98,15 @@ export function useEmotionTracker() {
   const loadTrackersForMonth = async (date) => {
     try {
       loading.value = true
+      error.value = null
       
-      // Charger les trackers pour le mois entier
-      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1)
-      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+      const year = date.getFullYear()
+      const month = date.getMonth() + 1 // getMonth() retourne 0-11, on veut 1-12
       
-      // Pour l'instant, on charge tous les trackers et on filtre côté client
-      // Plus tard, on pourrait optimiser avec une API qui prend une plage de dates
-      await loadTrackers()
+      console.log(`Chargement des trackers pour ${year}/${month}`)
+      
+      const monthTrackers = await trackerService.getTrackersByMonth(year, month)
+      trackers.value = monthTrackers
       
     } catch (err) {
       error.value = 'Erreur lors du chargement du mois'
@@ -123,6 +122,7 @@ export function useEmotionTracker() {
   
   // Gestion des trackers
   const createTracker = async (emotionId, datetime, commentaire = null) => {
+    console.log('Création tracker:', emotionId, datetime, commentaire)
     try {
       const trackerData = {
         emotion: emotionId,
@@ -132,8 +132,14 @@ export function useEmotionTracker() {
       
       const newTracker = await trackerService.createTracker(trackerData)
       
-      // Ajouter le nouveau tracker à la liste locale
-      trackers.value.push(newTracker)
+      // Ajouter le nouveau tracker à la liste locale seulement s'il appartient au mois actuel
+      const trackerDate = new Date(newTracker.datetime)
+      const currentYear = currentDate.value.getFullYear()
+      const currentMonth = currentDate.value.getMonth()
+      
+      if (trackerDate.getFullYear() === currentYear && trackerDate.getMonth() === currentMonth) {
+        trackers.value.push(newTracker)
+      }
       
       return newTracker
     } catch (err) {
@@ -145,12 +151,27 @@ export function useEmotionTracker() {
   
   const updateTracker = async (trackerId, updates) => {
     try {
+      // Si on met à jour la datetime, la formater correctement
+      if (updates.datetime) {
+        updates.datetime = trackerService.formatDateTimeForAPI(new Date(updates.datetime))
+      }
+      
       const updatedTracker = await trackerService.updateTracker(trackerId, updates)
       
       // Mettre à jour le tracker dans la liste locale
       const index = trackers.value.findIndex(t => t.id === trackerId)
       if (index !== -1) {
-        trackers.value[index] = updatedTracker
+        // Vérifier si le tracker modifié appartient toujours au mois actuel
+        const trackerDate = new Date(updatedTracker.datetime)
+        const currentYear = currentDate.value.getFullYear()
+        const currentMonth = currentDate.value.getMonth()
+        
+        if (trackerDate.getFullYear() === currentYear && trackerDate.getMonth() === currentMonth) {
+          trackers.value[index] = updatedTracker
+        } else {
+          // Le tracker a été déplacé vers un autre mois, le retirer de la liste actuelle
+          trackers.value.splice(index, 1)
+        }
       }
       
       return updatedTracker

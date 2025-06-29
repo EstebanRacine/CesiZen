@@ -34,6 +34,7 @@ const handleLogout = async () => {
   try {
     await authService.logout();
     console.log('Déconnexion réussie');
+    window.location.href = '/';
   } catch (error) {
     console.error('Erreur lors de la déconnexion:', error);
   }
