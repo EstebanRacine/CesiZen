@@ -7,62 +7,57 @@
 
       <div class="modal-header">
         <h2 class="modal-title">
-          {{ isEditing ? 'Modifier l\'info' : 'Créer une nouvelle info' }}
+          {{ isEditing ? 'Modifier l\'émotion' : 'Créer une nouvelle émotion' }}
         </h2>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="info-form">
+      <form @submit.prevent="handleSubmit" class="emotion-form">
         <div class="form-group">
-          <label for="titre" class="form-label">Titre *</label>
+          <label for="nom" class="form-label">Nom de l'émotion *</label>
           <input
-            id="titre"
-            v-model="formData.titre"
+            id="nom"
+            v-model="formData.nom"
             type="text"
             class="form-input"
-            placeholder="Entrez le titre de l'info"
+            placeholder="Ex: Joie, Tristesse..."
             required
             maxlength="255"
           />
-          <div class="character-count">{{ formData.titre.length }}/255</div>
+          <div class="character-count">{{ formData.nom.length }}/255</div>
         </div>
 
         <div class="form-group">
-          <label for="menu" class="form-label">Menu *</label>
+          <label for="categorie" class="form-label">Catégorie *</label>
           <select
-            id="menu"
-            v-model="formData.menu"
+            id="categorie"
+            v-model="formData.categorie"
             class="form-select"
             required
           >
-            <option value="">Sélectionnez un menu</option>
-            <option v-for="menu in menus" :key="menu.id" :value="menu.id">
-              {{ menu.nom }}
+            <option value="">Sélectionnez une catégorie</option>
+            <option v-for="category in categories" :key="category.id" :value="category.id">
+              {{ category.nom }}
             </option>
           </select>
         </div>
 
         <div class="form-group">
-          <label for="contenu" class="form-label">Contenu *</label>
-          <textarea
-            id="contenu"
-            v-model="formData.contenu"
-            class="form-textarea"
-            placeholder="Entrez le contenu de l'info"
-            required
-            rows="8"
-          ></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="image" class="form-label">Image</label>
+          <label for="icone" class="form-label">Image de l'émotion *</label>
           <FileInput
             v-model="imageFile"
-            input-id="image"
+            input-id="icone"
             placeholder="Choisir une image"
-            alt-text="Aperçu de l'image"
+            alt-text="Aperçu de l'émotion"
+            :required="!isEditing"
             @change="handleImageChange"
             @remove="removeImage"
           />
+          
+          <!-- Image actuelle en mode édition -->
+          <div v-if="formData.icone && isEditing && !imageFile" class="current-image">
+            <p>Image actuelle :</p>
+            <img :src="getImageUrl(formData.icone)" :alt="formData.nom" class="preview-image" />
+          </div>
         </div>
 
         <!-- Messages d'erreur -->
@@ -87,21 +82,21 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { X } from 'lucide-vue-next';
 import FileInput from '@/components/forms/FileInput.vue';
-import infoService from '@/services/singleton/infoService.js';
+import EmotionApiService from '@/services/api/EmotionApiService.js';
 
 const props = defineProps({
   show: {
     type: Boolean,
     default: false
   },
-  info: {
+  emotion: {
     type: Object,
     default: null
   },
-  menus: {
+  categories: {
     type: Array,
     default: () => []
   }
@@ -109,11 +104,14 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'success']);
 
+// Services
+const emotionService = new EmotionApiService();
+
 // État du formulaire
 const formData = reactive({
-  titre: '',
-  contenu: '',
-  menu: ''
+  nom: '',
+  categorie: '',
+  icone: ''
 });
 
 const imageFile = ref(null);
@@ -121,31 +119,31 @@ const errors = ref([]);
 const loading = ref(false);
 
 // Computed pour savoir si on est en mode édition
-const isEditing = computed(() => !!props.info);
+const isEditing = computed(() => !!props.emotion);
 
 // Fonction pour obtenir l'URL complète de l'image
 const getImageUrl = (imagePath) => {
   if (!imagePath) return '';
   if (imagePath.startsWith('http')) return imagePath;
-  // L'image est stockée côté backend dans public/uploads/infos/
+  // L'image est stockée côté backend dans public/uploads/emotions/
   return `http://localhost:8000${imagePath}`;
 };
 
 // Réinitialiser le formulaire
 const resetForm = () => {
-  formData.titre = '';
-  formData.contenu = '';
-  formData.menu = '';
+  formData.nom = '';
+  formData.categorie = '';
+  formData.icone = '';
   imageFile.value = null;
   errors.value = [];
 };
 
-// Watcher pour remplir le formulaire quand on passe une info en props
-watch(() => props.info, (newInfo) => {
-  if (newInfo) {
-    formData.titre = newInfo.titre || '';
-    formData.contenu = newInfo.contenu || '';
-    formData.menu = newInfo.menu?.id || '';
+// Watcher pour remplir le formulaire quand on passe une émotion en props
+watch(() => props.emotion, (newEmotion) => {
+  if (newEmotion) {
+    formData.nom = newEmotion.nom || '';
+    formData.categorie = newEmotion.categorie?.id || '';
+    formData.icone = newEmotion.icone || '';
   } else {
     resetForm();
   }
@@ -165,20 +163,20 @@ const removeImage = () => {
 const validateForm = () => {
   errors.value = [];
   
-  if (!formData.titre.trim()) {
-    errors.value.push('Le titre est requis');
+  if (!formData.nom.trim()) {
+    errors.value.push('Le nom est requis');
   }
   
-  if (!formData.contenu.trim()) {
-    errors.value.push('Le contenu est requis');
+  if (!formData.categorie) {
+    errors.value.push('La catégorie est requise');
   }
   
-  if (!formData.menu) {
-    errors.value.push('Le menu est requis');
+  if (!isEditing.value && !imageFile.value) {
+    errors.value.push('Une image est requise pour créer une émotion');
   }
   
-  if (formData.titre.length > 255) {
-    errors.value.push('Le titre ne peut pas dépasser 255 caractères');
+  if (formData.nom.length > 255) {
+    errors.value.push('Le nom ne peut pas dépasser 255 caractères');
   }
   
   return errors.value.length === 0;
@@ -193,17 +191,16 @@ const handleSubmit = async () => {
   try {
     // Préparer les données pour l'API
     const dataToSubmit = {
-      titre: formData.titre.trim(),
-      contenu: formData.contenu.trim(),
-      menu: formData.menu
+      nom: formData.nom.trim(),
+      categorie: formData.categorie
     };
     
     if (isEditing.value) {
       // Modification
-      await infoService.updateInfo(props.info.id, dataToSubmit, imageFile.value);
+      await emotionService.updateEmotion(props.emotion.id, dataToSubmit, imageFile.value);
     } else {
       // Création
-      await infoService.createInfo(dataToSubmit, imageFile.value);
+      await emotionService.createEmotion(dataToSubmit, imageFile.value);
     }
     
     emit('success');
@@ -300,7 +297,7 @@ const closeModal = () => {
   margin: 0;
 }
 
-.info-form {
+.emotion-form {
   padding: 2rem;
 }
 
@@ -317,8 +314,7 @@ const closeModal = () => {
 }
 
 .form-input,
-.form-select,
-.form-textarea {
+.form-select {
   width: 100%;
   padding: 0.75rem 1rem;
   border: 2px solid #e9ecef;
@@ -329,17 +325,10 @@ const closeModal = () => {
 }
 
 .form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
+.form-select:focus {
   outline: none;
   border-color: #2a5d49;
   box-shadow: 0 0 0 3px rgba(42, 93, 73, 0.1);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 120px;
-  font-family: inherit;
 }
 
 .character-count {
@@ -347,6 +336,23 @@ const closeModal = () => {
   color: #6c757d;
   text-align: right;
   margin-top: 0.25rem;
+}
+
+.current-image {
+  margin-top: 1rem;
+}
+
+.current-image p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.preview-image {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .error-messages {
@@ -445,7 +451,7 @@ const closeModal = () => {
     font-size: 1.5rem;
   }
   
-  .info-form {
+  .emotion-form {
     padding: 1.5rem;
   }
   
@@ -477,7 +483,7 @@ const closeModal = () => {
     font-size: 1.3rem;
   }
   
-  .info-form {
+  .emotion-form {
     padding: 1rem;
   }
 }

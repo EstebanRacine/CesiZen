@@ -19,6 +19,10 @@
       <div v-else-if="activeSection === 'users'" class="admin-section">
         <UserAdmin />
       </div>
+      
+      <div v-else-if="activeSection === 'emotions'" class="admin-section">
+        <EmotionAdmin />
+      </div>
 
       <div v-else-if="activeSection === 'stats'" class="admin-section">
         <StatsAdmin />
@@ -39,6 +43,7 @@ import AdminNavigation from '@/components/admin/AdminNavigation.vue'
 import AccessDenied from '@/components/ui/AccessDenied.vue'
 import InfoAdmin from '@/components/admin/InfoAdmin.vue'
 import UserAdmin from '@/components/admin/UserAdmin.vue'
+import EmotionAdmin from '@/components/admin/EmotionAdmin.vue'
 import StatsAdmin from '@/components/admin/StatsAdmin.vue'
 import SettingsAdmin from '@/components/admin/SettingsAdmin.vue'
 

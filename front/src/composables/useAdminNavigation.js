@@ -18,6 +18,11 @@ export function useAdminNavigation() {
       icon: '👥'
     },
     {
+      id: 'emotions',
+      title: 'Émotions',
+      icon: '😊'
+    },
+    {
       id: 'stats',
       title: 'Statistiques',
       icon: '📊'
