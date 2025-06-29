@@ -38,7 +38,10 @@ final class TrackerController extends AbstractApiController
     )]
     public function getByMyUser(TrackerRepository $trackerRepository): Response
     {
-        $trackers = $trackerRepository->findBy(['user' => $this->getUser()]);
+        $trackers = $trackerRepository->findBy([
+            'user' => $this->getUser(),
+            'actif' => true
+        ]);
         return $this->json($trackers, Response::HTTP_OK, [], ['groups' => 'tracker:read']);
     }
 
@@ -65,6 +68,18 @@ final class TrackerController extends AbstractApiController
         $dateTime = \DateTime::createFromFormat('Y-m-d', $date);
 
         $trackers = $trackerRepository->findByUserAndDate($this->getUser(), $dateTime);
+        return $this->json($trackers, Response::HTTP_OK, [], ['groups' => 'tracker:read']);
+    }
+
+
+    #[Route('/me/month/{year}/{month}', name: 'get_by_user_and_month_year', methods: ['GET'])]
+    public function getByUserAndMonthYear(TrackerRepository $trackerRepository, int $year, int $month): Response
+    {
+        if (!checkdate($month, 1, $year)) {
+            return $this->json(['message' => 'Mois ou année invalide'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $trackers = $trackerRepository->findByUserAndMonthYear($this->getUser(), $year, $month);
         return $this->json($trackers, Response::HTTP_OK, [], ['groups' => 'tracker:read']);
     }
 
@@ -282,7 +297,7 @@ final class TrackerController extends AbstractApiController
             return $this->json(['message' => 'Vous ne pouvez pas modifier ce tracker'], Response::HTTP_FORBIDDEN);
         }
 
-        $data = $this->extractRequestData($request, ['emotion', 'datetime', 'note']);
+        $data = $this->extractRequestData($request, ['emotion', 'datetime', 'commentaire']);
 
         if (isset($data['emotion'])) {
             $emotion = $emotionRepository->find($data['emotion']);

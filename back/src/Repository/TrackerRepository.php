@@ -31,6 +31,23 @@ class TrackerRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findByUserAndMonthYear(User $user, int $year, int $month): array
+    {
+        $start = new \DateTime("$year-$month-01 00:00:00");
+        $end = (clone $start)->modify('last day of this month')->setTime(23, 59, 59);
+
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.user = :userId')
+            ->andWhere('t.datetime >= :startOfMonth')
+            ->andWhere('t.datetime <= :endOfMonth')
+            ->setParameter('userId', $user->getId())
+            ->setParameter('startOfMonth', $start)
+            ->setParameter('endOfMonth', $end)
+            ->orderBy('t.datetime', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Tracker[] Returns an array of Tracker objects
     //     */
