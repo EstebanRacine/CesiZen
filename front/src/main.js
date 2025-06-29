@@ -6,14 +6,23 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import authService from './services/singleton/authService.js'
+import capacitorService from './plugins/capacitor.js'
 
 const app = createApp(App)
 
 // Initialiser l'authentification au démarrage de l'application
 authService.initializeAuth()
 
-// Rendre le service d'authentification disponible globalement (optionnel)
+// Initialiser Capacitor pour les fonctionnalités mobiles
+capacitorService.initialize()
+
+// Configurer les gestionnaires pour les applications mobiles
+capacitorService.setupBackButtonHandler(router)
+capacitorService.setupAppStateHandlers()
+
+// Rendre les services disponibles globalement
 app.config.globalProperties.$authService = authService
+app.config.globalProperties.$capacitor = capacitorService
 
 // Garde de route pour vérifier l'authentification
 router.beforeEach((to, from, next) => {

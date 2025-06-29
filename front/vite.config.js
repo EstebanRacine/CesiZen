@@ -15,6 +15,16 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vue', 'vue-router', 'pinia'],
+          capacitor: ['@capacitor/core', '@capacitor/app', '@capacitor/device'],
+        }
+      }
+    }
+  },
   server: {
     proxy: {
       '/api': {
@@ -23,5 +33,9 @@ export default defineConfig({
         rewrite: path => path.replace(/^\/api/, '')
       }
     }
+  },
+  define: {
+    __APP_NAME__: JSON.stringify('CesiZen'),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
   }
 })
