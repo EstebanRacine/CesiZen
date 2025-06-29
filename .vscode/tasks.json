@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Symfony Backend",
+			"type": "shell",
+			"command": "cd c:\\wamp64\\www\\CesiZen\\back && php -S localhost:8000 -t public",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Vue Frontend",
+			"type": "shell",
+			"command": "cd c:\\wamp64\\www\\CesiZen\\front && npm run dev",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

@@ -282,6 +282,27 @@ class AuthApiService extends ApiService {
   }
 
   /**
+   * Change le mot de passe de l'utilisateur connecté.
+   * @param {string} currentPassword - Le mot de passe actuel.
+   * @param {string} newPassword - Le nouveau mot de passe.
+   * @returns {Promise<any>} - La réponse de l'API.
+   */
+  async changePassword(currentPassword, newPassword) {
+    try {
+      const passwordData = {
+        old_password: currentPassword,
+        new_password: newPassword
+      };
+
+      const response = await this.post('/user/reset-password', passwordData);
+      return response;
+    } catch (error) {
+      console.error('Erreur lors du changement de mot de passe:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Initialise l'état d'authentification au démarrage de l'application.
    * Tente de décoder un token existant si l'application est rafraîchie.
    */

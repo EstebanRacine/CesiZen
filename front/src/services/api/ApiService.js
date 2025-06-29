@@ -102,6 +102,44 @@ class ApiService {
   }
 
   /**
+   * Effectue une requête POST avec FormData (pour l'upload de fichiers).
+   * @param {string} url - Le chemin de l'URL relatif à la baseURL (ex: '/upload').
+   * @param {FormData} formData - Les données FormData à envoyer.
+   * @returns {Promise<any>} - La réponse de l'API.
+   */
+  async postFormData(url, formData) {
+    try {
+      const response = await this.api.post(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Effectue une requête PUT avec FormData (pour l'upload de fichiers).
+   * @param {string} url - Le chemin de l'URL relatif à la baseURL (ex: '/upload/123').
+   * @param {FormData} formData - Les données FormData à envoyer.
+   * @returns {Promise<any>} - La réponse de l'API.
+   */
+  async putFormData(url, formData) {
+    try {
+      const response = await this.api.put(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Définit un en-tête HTTP commun pour toutes les requêtes futures de cette instance.
    * Ceci est utile pour des choses comme les tokens d'autorisation.
    * @param {string} name - Nom de l'en-tête (ex: 'Authorization').

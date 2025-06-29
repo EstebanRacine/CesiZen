@@ -1,99 +1,91 @@
 <template>
   <div class="admin-view">
-    <h1>Administration</h1>
-    <p>Page d'administration - À compléter</p>
-    <p><em>Cette page nécessite une authentification et le rôle administrateur.</em></p>
+    <div class="admin-header">
+      <h1>Administration</h1>
+      <p>Tableau de bord administrateur - Gestion de l'application</p>
+    </div>
     
     <div v-if="isAdmin" class="admin-content">
-      <h2>Panneau d'administration</h2>
-      <div class="admin-sections">
-        <div class="admin-card">
-          <h3>Gestion des utilisateurs</h3>
-          <p>À implémenter</p>
-        </div>
-        <div class="admin-card">
-          <h3>Gestion des articles</h3>
-          <p>À implémenter</p>
-        </div>
-        <div class="admin-card">
-          <h3>Statistiques</h3>
-          <p>À implémenter</p>
-        </div>
+      <AdminNavigation 
+        :sections="adminSections"
+        :active-section="activeSection"
+        @section-change="setActiveSection"
+      />
+
+      <div v-if="activeSection === 'infos'" class="admin-section">
+        <InfoAdmin />
+      </div>
+
+      <div v-else-if="activeSection === 'users'" class="admin-section">
+        <UserAdmin />
+      </div>
+
+      <div v-else-if="activeSection === 'stats'" class="admin-section">
+        <StatsAdmin />
+      </div>
+
+      <div v-else-if="activeSection === 'settings'" class="admin-section">
+        <SettingsAdmin />
       </div>
     </div>
     
-    <div v-else class="access-denied">
-      <p>⚠️ Accès refusé - Droits administrateur requis</p>
-    </div>
+    <AccessDenied v-else />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import authService from '@/services/singleton/authService.js'
+import { useAdminNavigation } from '@/composables/useAdminNavigation.js'
+import AdminNavigation from '@/components/admin/AdminNavigation.vue'
+import AccessDenied from '@/components/ui/AccessDenied.vue'
+import InfoAdmin from '@/components/admin/InfoAdmin.vue'
+import UserAdmin from '@/components/admin/UserAdmin.vue'
+import StatsAdmin from '@/components/admin/StatsAdmin.vue'
+import SettingsAdmin from '@/components/admin/SettingsAdmin.vue'
 
-// Vérifier si l'utilisateur est admin
-const isAdmin = computed(() => authService.isAdmin.value)
+const { activeSection, isAdmin, adminSections, setActiveSection } = useAdminNavigation()
 </script>
 
 <style scoped>
 .admin-view {
-  padding: 2rem;
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-h1 {
+.admin-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.admin-header h1 {
   color: #2a5d49;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.admin-header p {
+  color: #6b7280;
+  margin: 0.5rem 0;
 }
 
 .admin-content {
   margin-top: 2rem;
 }
 
-.admin-content h2 {
-  color: #2a5d49;
-  margin-bottom: 1.5rem;
-  font-size: 1.3rem;
+.admin-section {
+  margin-bottom: 2rem;
 }
 
-.admin-sections {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
-.admin-card {
-  background: #f8fffe;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.admin-card h3 {
-  color: #2a5d49;
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
-}
-
-.admin-card p {
-  color: #666;
-  margin: 0;
-}
-
-.access-denied {
-  background: #ffe6e6;
-  color: #d63031;
-  padding: 1rem;
-  border-radius: 8px;
-  border: 1px solid #fab1a0;
-  margin-top: 2rem;
-  text-align: center;
-}
-
-em {
-  color: #666;
-  font-size: 0.9rem;
+@media (max-width: 768px) {
+  .admin-view {
+    padding: 1rem;
+  }
+  
+  .admin-header h1 {
+    font-size: 2rem;
+  }
 }
 </style>
