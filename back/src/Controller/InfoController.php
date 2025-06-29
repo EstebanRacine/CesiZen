@@ -2,11 +2,11 @@
 
 namespace App\Controller;
 
+use App\Controller\AbstractApiController;
 use App\Entity\Info;
 use App\Repository\InfoRepository;
 use App\Repository\MenuRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,7 +14,7 @@ use OpenApi\Attributes as OA;
 use Nelmio\ApiDocBundle\Attribute\Model;
 
 #[Route('/api/info', name: 'info_')]
-final class InfoController extends AbstractController
+final class InfoController extends AbstractApiController
 {
     #[Route('', name: 'get_all_infos', methods: ['GET'])]
     #[OA\Tag(name: 'Info')]
@@ -131,7 +131,7 @@ final class InfoController extends AbstractController
         return $this->json($infos, Response::HTTP_OK, [], ['groups' => 'info:read']);
     }
 
-    #[Route('/', name: 'create_info', methods: ['POST'])]
+    #[Route('', name: 'create_info', methods: ['POST'])]
     #[OA\Tag(name: 'Info')]
     #[OA\Post(
         summary: 'Créer une nouvelle info',
@@ -170,10 +170,11 @@ final class InfoController extends AbstractController
     )]
     public function createInfo(Request $request, EntityManagerInterface $em, MenuRepository $menuRepository): Response
     {
-        $data = json_decode($request->getContent(), true);
-        $titre = $data['titre'] ?? null;
-        $contenu = $data['contenu'] ?? null;
-        $menu = $data['menu'] ?? null;
+        // Extraire les données de la requête (JSON ou multipart)
+        $data = $this->extractRequestData($request, ['titre', 'contenu', 'menu']);
+        $titre = $data['titre'];
+        $contenu = $data['contenu'];
+        $menu = $data['menu'];
 
         if (empty($titre) || empty($contenu) || empty($menu)) {
             return $this->json(['message' => 'Titre, contenu et menu requis'], Response::HTTP_BAD_REQUEST);
@@ -211,9 +212,9 @@ final class InfoController extends AbstractController
         return $this->json($info, Response::HTTP_CREATED, [], ['groups' => 'info:read']);
     }
 
-    #[Route('/{id}', name: 'update_info', methods: ['PUT'])]
+    #[Route('/{id}', name: 'update_info', methods: ['POST'])]
     #[OA\Tag(name: 'Info')]
-    #[OA\Put(
+    #[OA\Post(
         summary: 'Mettre à jour une info',
         description: 'Permet de mettre à jour une info existante en fournissant son ID et les nouveaux détails.',
         parameters: [
@@ -263,16 +264,15 @@ final class InfoController extends AbstractController
     )]
     public function updateInfo(int $id, Request $request, InfoRepository $infoRepository, EntityManagerInterface $em): Response
     {
-        $data = json_decode($request->getContent(), true);
-
         $info = $infoRepository->find($id);
         if (!$info) {
             return $this->json(['message' => 'Info non trouvée'], Response::HTTP_NOT_FOUND);
         }
 
-        $titre = $data['titre'] ?? null;
-        $contenu = $data['contenu'] ?? null;
-        
+        // Extraire les données de la requête (JSON ou multipart)
+        $data = $this->extractRequestData($request, ['titre', 'contenu']);
+        $titre = $data['titre'];
+        $contenu = $data['contenu'];
 
         if (empty($titre) || empty($contenu)) {
             return $this->json(['message' => 'Titre et contenu requis'], Response::HTTP_BAD_REQUEST);

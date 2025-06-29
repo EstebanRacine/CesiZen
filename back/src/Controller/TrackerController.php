@@ -2,10 +2,10 @@
 
 namespace App\Controller;
 
+use App\Controller\AbstractApiController;
 use App\Repository\EmotionRepository;
 use App\Repository\TrackerRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,7 +14,7 @@ use App\Entity\Tracker;
 use Nelmio\ApiDocBundle\Attribute\Model;
 
 #[Route('/api/tracker', name: 'tracker_')]
-final class TrackerController extends AbstractController
+final class TrackerController extends AbstractApiController
 {
 
     #[Route('/me', name: 'get_mine', methods: ['GET'])]
@@ -156,7 +156,7 @@ final class TrackerController extends AbstractController
         )
     )]
     public function create(EntityManagerInterface $em, Request $request, EmotionRepository $emotionRepository): Response{
-        $data = json_decode($request->getContent(), true);
+        $data = $this->extractRequestData($request, ['emotion', 'datetime', 'note']);
 
         if (empty($data['emotion']) || empty($data['datetime'])) {
             return $this->json(['message' => 'Emotion et datetime sont requis'], Response::HTTP_BAD_REQUEST);
@@ -179,9 +179,9 @@ final class TrackerController extends AbstractController
         return $this->json($tracker, Response::HTTP_CREATED, [], ['groups' => 'tracker:read']);
     }
 
-    #[Route('/{id}', name: 'update', methods: ['PUT'])]
+    #[Route('/{id}', name: 'update', methods: ['POST'])]
     #[OA\Tag(name: 'Trackers')]
-    #[OA\Put(
+    #[OA\Post(
         summary: 'Mettre à jour un tracker',
         description: 'Permet de mettre à jour un tracker existant en fonction de son ID.',
     )]
@@ -282,7 +282,7 @@ final class TrackerController extends AbstractController
             return $this->json(['message' => 'Vous ne pouvez pas modifier ce tracker'], Response::HTTP_FORBIDDEN);
         }
 
-        $data = json_decode($request->getContent(), true);
+        $data = $this->extractRequestData($request, ['emotion', 'datetime', 'note']);
 
         if (isset($data['emotion'])) {
             $emotion = $emotionRepository->find($data['emotion']);

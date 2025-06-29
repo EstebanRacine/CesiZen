@@ -2,10 +2,10 @@
 
 namespace App\Controller;
 
+use App\Controller\AbstractApiController;
 use App\Entity\CategorieEmotion;
 use App\Repository\EmotionRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,7 +14,7 @@ use App\Entity\Emotion;
 use Nelmio\ApiDocBundle\Attribute\Model;
 
 #[Route('/api/emotion', name: 'app_emotion_')]
-final class EmotionController extends AbstractController
+final class EmotionController extends AbstractApiController
 {
 
     #[Route('/all', name: 'get_all', methods: ['GET'])]
@@ -199,7 +199,7 @@ final class EmotionController extends AbstractController
     )]
     public function create(Request $request, EntityManagerInterface $em): Response
     {
-        $data = json_decode($request->getContent(), true);
+        $data = $this->extractRequestData($request, ['nom', 'icone', 'categorie']);
 
         if (!isset($data['nom']) || !isset($data['icone']) || !isset($data['categorie'])) {
             return $this->json(['message' => 'Le nom, l\'icône et la catégorie de l\'émotion sont requis'], Response::HTTP_BAD_REQUEST);
@@ -223,9 +223,9 @@ final class EmotionController extends AbstractController
         return $this->json($emotion, Response::HTTP_CREATED, [], ['groups' => 'emotion:read']);
     }
 
-    #[Route('/{id}', name: 'update', methods: ['PUT'])]
+    #[Route('/{id}', name: 'update', methods: ['POST'])]
     #[OA\Tag(name: 'Émotions')]
-    #[OA\Put(
+    #[OA\Post(
         summary: 'Mettre à jour une émotion',
         description: 'Permet de mettre à jour une émotion existante.',
     )]
@@ -285,7 +285,7 @@ final class EmotionController extends AbstractController
     )]
     public function update(Request $request, EntityManagerInterface $em, int $id): Response
     {
-        $data = json_decode($request->getContent(), true);
+        $data = $this->extractRequestData($request, ['nom', 'icone', 'categorie']);
         $emotion = $em->getRepository(Emotion::class)->find($id);
 
         if (!$emotion) {

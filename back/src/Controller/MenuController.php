@@ -2,9 +2,9 @@
 
 namespace App\Controller;
 
+use App\Controller\AbstractApiController;
 use App\Repository\MenuRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -13,7 +13,7 @@ use App\Entity\Menu;
 use Nelmio\ApiDocBundle\Attribute\Model;
 
 #[Route('/api/menu', name: 'app_menu_')]
-final class MenuController extends AbstractController
+final class MenuController extends AbstractApiController
 {
     #[Route('/all', name: 'get_all', methods: ['GET'])]
     #[OA\Tag(name: 'Menus')]
@@ -161,7 +161,7 @@ final class MenuController extends AbstractController
     )]
     public function create(EntityManagerInterface $em, Request $request): Response
     {
-        $data = json_decode($request->getContent(), true);
+        $data = $this->extractRequestData($request, ['nom', 'icone']);
         if (empty($data['nom']) || empty($data['icone'])) {
             return $this->json(['message' => 'Nom and icone sont requis'], Response::HTTP_BAD_REQUEST);
         }
@@ -179,9 +179,9 @@ final class MenuController extends AbstractController
         return $this->json($menu, Response::HTTP_CREATED, [], ['groups' => 'menu:read']);
     }
 
-    #[Route('/{id}', name: 'update', methods: ['PUT'])]
+    #[Route('/{id}', name: 'update', methods: ['POST'])]
     #[OA\Tag(name: 'Menus')]
-    #[OA\Put(
+    #[OA\Post(
         summary: 'Mettre à jour un menu',
         description: 'Permet de mettre à jour un menu existant en fonction de son ID.',
     )]
@@ -236,7 +236,7 @@ final class MenuController extends AbstractController
     )]
     public function update(EntityManagerInterface $em, Request $request, int $id): Response
     {
-        $data = json_decode($request->getContent(), true);
+        $data = $this->extractRequestData($request, ['nom', 'icone', 'actif']);
         $menu = $em->getRepository(Menu::class)->find($id);
 
         if (!$menu) {

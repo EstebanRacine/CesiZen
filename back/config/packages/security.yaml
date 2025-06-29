@@ -63,8 +63,13 @@ security:
         # Profil utilisateur - utilisateur connecté requis
         - { path: ^/api/profile, roles: ROLE_USER }
         
-        # Gestion des utilisateurs - admin uniquement
-        - { path: ^/api/user, roles: ROLE_ADMIN }
+        # Routes admin des utilisateurs - admin uniquement
+        - { path: ^/api/user/admin, roles: ROLE_ADMIN }
+        
+        # Autres routes utilisateur (reset password, etc.) - utilisateur connecté
+        - { path: ^/api/user, roles: ROLE_USER }
+        
+        # Gestion des utilisateurs - admin uniquement (legacy)
         - { path: ^/api/users, roles: ROLE_ADMIN }
         
         # Toutes les autres routes API - utilisateur connecté par défaut
