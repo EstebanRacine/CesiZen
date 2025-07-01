@@ -141,18 +141,6 @@ npm run build
 npm run preview
 ```
 
-#### Tests
-```bash
-# Tests unitaires
-npm run test:unit
-
-# Tests end-to-end
-npm run test:e2e
-
-# Linting
-npm run lint
-```
-
 ## 📁 Structure du projet
 
 ```

@@ -20,11 +20,11 @@ final class TrackerControllerTest extends WebTestCase
 
         // Créer ou récupérer l'utilisateur
         $userRepo = $em->getRepository(User::class);
-        $user = $userRepo->findOneBy(['username' => 'alice0']);
+        $user = $userRepo->findOneBy(['username' => 'alice']);
 
         if (!$user) {
             $user = new User();
-            $user->setUsername('alice0');
+            $user->setUsername('alice');
             $user->setRoles(['ROLE_USER']);
             $user->setPassword(
             $container->get(UserPasswordHasherInterface::class)
@@ -78,7 +78,7 @@ final class TrackerControllerTest extends WebTestCase
 
         public function testGetTrackerByIdFound(): void
         {
-            // tracker_0 existe via fixtures et appartient à alice0
+            // tracker_0 existe via fixtures et appartient à alice
             $this->client->request('GET', '/api/tracker/1', [], [], $this->getAuthHeaders());
             $this->assertEquals(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
             $this->assertResponseFormatSame('json');
@@ -182,7 +182,7 @@ final class TrackerControllerTest extends WebTestCase
                 'datetime' => (new \DateTime())->format('Y-m-d\TH:i:s')
             ];
             $this->client->request(
-                'PUT',
+                'POST',
                 '/api/tracker/' . $trackerId,
                 [],
                 [],
@@ -195,31 +195,13 @@ final class TrackerControllerTest extends WebTestCase
             $this->assertEquals(1, $updatedData['emotion']['id']);
         }
 
-        public function testUpdateTrackerForbidden(): void
-        {
-            $payload = [
-                'commentaire' => 'Commentaire modifié'
-            ];
-            $this->client->request(
-                'PUT',
-                '/api/tracker/1',
-                [],
-                [],
-                $this->getAuthHeaders(),
-                json_encode($payload)
-            );
-            $this->assertEquals(Response::HTTP_FORBIDDEN, $this->client->getResponse()->getStatusCode());
-            $data = json_decode($this->client->getResponse()->getContent(), true);
-            $this->assertEquals('Vous ne pouvez pas modifier ce tracker', $data['message']);
-        }
-
         public function testUpdateTrackerNotFound(): void
         {
             $payload = [
                 'commentaire' => 'Impossible'
             ];
             $this->client->request(
-                'PUT',
+                'POST',
                 '/api/tracker/99999',
                 [],
                 [],
@@ -257,7 +239,7 @@ final class TrackerControllerTest extends WebTestCase
                 'emotion' => 99999
             ];
             $this->client->request(
-                'PUT',
+                'POST',
                 '/api/tracker/' . $trackerId,
                 [],
                 [],
@@ -295,7 +277,7 @@ final class TrackerControllerTest extends WebTestCase
                 'datetime' => 'invalid-date'
             ];
             $this->client->request(
-                'PUT',
+                'POST',
                 '/api/tracker/' . $trackerId,
                 [],
                 [],

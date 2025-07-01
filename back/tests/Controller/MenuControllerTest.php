@@ -21,15 +21,15 @@ final class MenuControllerTest extends WebTestCase
 
         // Créer ou récupérer l'utilisateur
         $userRepo = $em->getRepository(User::class);
-        $user = $userRepo->findOneBy(['username' => 'alice0']);
+        $user = $userRepo->findOneBy(['username' => 'admin']);
 
         if (!$user) {
             $user = new User();
-            $user->setUsername('alice0');
-            $user->setRoles(['ROLE_USER']);
+            $user->setUsername('admin');
+            $user->setRoles(['ROLE_USER', 'ROLE_ADMIN']);
             $user->setPassword(
                 $container->get(UserPasswordHasherInterface::class)
-                        ->hashPassword($user, 'password0')
+                        ->hashPassword($user, 'admin')
             );
             $user->setActif(true);
             $user->setDateCreation(new \DateTime());
@@ -136,7 +136,7 @@ final class MenuControllerTest extends WebTestCase
             'icone' => 'updatedicon'
         ];
         $this->client->request(
-            'PUT',
+            'POST',
             '/api/menu/1',
             [],
             [],
@@ -156,7 +156,7 @@ final class MenuControllerTest extends WebTestCase
             'icone' => 'updatedicon'
         ];
         $this->client->request(
-            'PUT',
+            'POST',
             '/api/menu/99999',
             [],
             [],

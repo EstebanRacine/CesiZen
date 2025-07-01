@@ -21,15 +21,15 @@ final class InfoControllerTest extends WebTestCase
 
         // Créer ou récupérer l'utilisateur
         $userRepo = $em->getRepository(User::class);
-        $user = $userRepo->findOneBy(['username' => 'alice0']);
+        $user = $userRepo->findOneBy(['username' => 'admin']);
 
         if (!$user) {
             $user = new User();
-            $user->setUsername('alice0');
-            $user->setRoles(['ROLE_USER']);
+            $user->setUsername('admin');
+            $user->setRoles(['ROLE_USER', 'ROLE_ADMIN']);
             $user->setPassword(
                 $container->get(UserPasswordHasherInterface::class)
-                        ->hashPassword($user, 'password0')
+                        ->hashPassword($user, 'admin')
             );
             $user->setActif(true);
             $user->setDateCreation(new \DateTime());
@@ -113,7 +113,7 @@ final class InfoControllerTest extends WebTestCase
 
         $this->client->request(
             'POST',
-            '/api/info/',
+            '/api/info',
             [],
             [],
             $this->getAuthHeaders(),
@@ -134,7 +134,7 @@ final class InfoControllerTest extends WebTestCase
         ]);
         $this->client->request(
             'POST',
-            '/api/info/',
+            '/api/info',
             [],
             [],
             $this->getAuthHeaders(),
@@ -153,7 +153,7 @@ final class InfoControllerTest extends WebTestCase
             'contenu' => 'Contenu modifié'
         ]);
         $this->client->request(
-            'PUT',
+            'POST',
             '/api/info/1',
             [],
             [],
@@ -173,7 +173,7 @@ final class InfoControllerTest extends WebTestCase
             'contenu' => 'Contenu'
         ]);
         $this->client->request(
-            'PUT',
+            'POST',
             '/api/info/99999',
             [],
             [],
@@ -193,7 +193,7 @@ final class InfoControllerTest extends WebTestCase
             // missing contenu
         ]);
         $this->client->request(
-            'PUT',
+            'POST',
             '/api/info/1',
             [],
             [],
@@ -215,7 +215,7 @@ final class InfoControllerTest extends WebTestCase
         ]);
         $this->client->request(
             'POST',
-            '/api/info/',
+            '/api/info',
             [],
             [],
             $this->getAuthHeaders(),
