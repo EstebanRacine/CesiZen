@@ -166,7 +166,7 @@ class UserApiService extends ApiService {
     const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz'
     const numberChars = '0123456789'
     
-    let password = ''
+    let password = '!'
     
     // S'assurer qu'on a au moins une majuscule et un chiffre (règles du UserController)
     password += uppercaseChars[Math.floor(Math.random() * uppercaseChars.length)]

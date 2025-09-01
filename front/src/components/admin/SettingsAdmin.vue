@@ -278,7 +278,7 @@
           </div>
         </div>
 
-        <div class="tool-card">
+        <!-- <div class="tool-card">
           <div class="tool-icon">📊</div>
           <div class="tool-content">
             <h4>Optimisation de la base</h4>
@@ -287,7 +287,7 @@
               {{ dbOptimizing ? 'Optimisation...' : 'Optimiser la base' }}
             </button>
           </div>
-        </div>
+        </div> -->
 
         <div class="tool-card">
           <div class="tool-icon">📋</div>
@@ -302,7 +302,7 @@
       </div>
 
       <!-- Mode maintenance -->
-      <div class="maintenance-mode">
+      <!-- <div class="maintenance-mode">
         <div class="mode-header">
           <h4>🚧 Mode maintenance</h4>
           <div class="mode-toggle">
@@ -329,7 +329,7 @@
             ></textarea>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
 
     <!-- Indicateur de changements non sauvegardés -->
@@ -346,8 +346,8 @@ import { ref, computed, watch, onMounted } from 'vue'
 const activeSettingSection = ref('interface')
 const settingSections = [
   { id: 'interface', title: 'Interface', icon: '🎨' },
-  { id: 'notifications', title: 'Notifications', icon: '📧' },
-  { id: 'security', title: 'Sécurité', icon: '🔒' },
+  // { id: 'notifications', title: 'Notifications', icon: '📧' },
+  // { id: 'security', title: 'Sécurité', icon: '🔒' },
   { id: 'maintenance', title: 'Maintenance', icon: '🗄️' }
 ]
 
